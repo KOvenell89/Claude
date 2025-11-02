@@ -35,29 +35,30 @@ print(f"Total weeks: {len(data)}")
 print(f"Range: {data.index[0].date()} to {data.index[-1].date()}")
 print()
 
-# Get the current 10-week window
-current_window = data.tail(10).copy()
+# CRITICAL FIX: Need 11 weeks to get 10 week-to-week comparisons
+# Week 1 is baseline, Weeks 2-11 are compared (10 comparisons total)
+current_window = data.tail(11).copy()
 
 # FIXED PATTERN COUNTING LOGIC
 print("=" * 80)
-print("STEP 1: FIXED PATTERN COUNTING")
+print("STEP 1: CURRENT 11-WEEK SEQUENCE (10 COMPARISONS)")
 print("=" * 80)
 print()
 
 # Count up/down weeks (Close vs prior Close)
-# CRITICAL FIX: Use 9 valid comparisons, not 10 (first week has no prior)
+# CRITICAL FIX: Use 10 valid comparisons (first week has no prior, so 11 weeks → 10 comparisons)
 current_window['Price_Change'] = current_window['Close'].diff()
 current_window['Up'] = (current_window['Price_Change'] > 0).astype(int)
 
 # Count only valid comparisons (excluding first week which has NaN)
 up_weeks = int(current_window['Up'].iloc[1:].sum())  # Skip first row (NaN)
-down_weeks = 9 - up_weeks  # 9 valid comparisons total
+down_weeks = 10 - up_weeks  # 10 valid comparisons total
 
 # Validation
-if up_weeks + down_weeks != 9:
-    print(f"⚠️  WARNING: Pattern counting error! Up ({up_weeks}) + Down ({down_weeks}) ≠ 9")
+if up_weeks + down_weeks != 10:
+    print(f"⚠️  WARNING: Pattern counting error! Up ({up_weeks}) + Down ({down_weeks}) ≠ 10")
 else:
-    print(f"✓ Validation passed: Up ({up_weeks}) + Down ({down_weeks}) = 9")
+    print(f"✓ Validation passed: Up ({up_weeks}) + Down ({down_weeks}) = 10")
 
 # Calculate trajectory
 close_prices = current_window['Close'].values.flatten()
@@ -116,10 +117,10 @@ for i in range(len(current_window)):
 
 print("-" * 70)
 print()
-print(f"Manual Count (9 valid week-to-week comparisons):")
+print(f"Manual Count (10 valid week-to-week comparisons):")
 print(f"  Up weeks:   {up_count}")
 print(f"  Down weeks: {down_count}")
-print(f"  Total:      {up_count + down_count} (should be 9)")
+print(f"  Total:      {up_count + down_count} (should be 10)")
 print()
 
 if up_count == up_weeks and down_count == down_weeks:
@@ -161,8 +162,8 @@ else:
         print("  - Different date ranges analyzed (Barchart uses a specific end date)")
         print("  - Different data sources or weekly aggregation methods")
         print()
-        if int(current_up) + int(current_down) == 9:
-            print("✓ However, our calculation correctly uses 9 comparisons (not 10)")
+        if int(current_up) + int(current_down) == 10:
+            print("✓ However, our calculation correctly uses 10 comparisons")
             print("  The fix is working correctly!")
     else:
         print("✗ Trajectory differs")
